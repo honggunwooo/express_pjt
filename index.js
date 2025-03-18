@@ -157,7 +157,7 @@ app.get('/asdf', (req, res) => {
 });
 
 
-app.get('abc', (req, res) => {
+app.get('/abc', (req, res) => {
   res.send('가나다다');
 });
 
@@ -165,3 +165,6 @@ app.get('/users', (req, res) => {
   res.json(users);
 });
 
+app.get('/articles', (req, res) => {
+  res.json(articles);
+});
