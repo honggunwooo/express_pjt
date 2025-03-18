@@ -7,14 +7,18 @@ app.listen(PORT, () => {
 });
 
 app.get('/ping', (req, res) => {
-    res.send('pong');
-  });
+  res.send('pong');
+});
 
 app.get('/tic', (req, res) => {
-    res.send('tac');
-  });
-  
+  res.send('tac');
+});
+
 app.get('/asdf', (req, res) => {
-    res.send('qwerty');
-  });
-  
+  res.send('qwerty');
+});
+
+
+app.get('/asdf', (req, res) => {
+  res.send('qwerty');
+});
