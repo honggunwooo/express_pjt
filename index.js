@@ -1,9 +1,15 @@
 const express = require('express');
 const app = express();
 const PORT = 3000;
+// json으로 된 post의 바디를 읽기 
+app.use(express.json())
+//cors 문제해결
+const cors = require('cors')
+app.use(cors());
+//json으로 된 post의 바디를 읽기 위해 필요
+app.use(express.json())
+const users = [
 
-
-const users =  [
   {
     "id": 1,
     "name": "홍길동",
@@ -165,25 +171,97 @@ app.get('/users', (req, res) => {
   res.json(users);
 });
 
-app.get('/articles', (req, res) => {
-  res.json(articles);
-});
+// app.get('/articles', (req, res) => {
+//   res.json(articles);
+// });
 
-app.get('/test',(req, res)=>{
+app.get('/test', (req, res) => {
   // console.log(req.query);
   console.log(req.query.id);
   res.send("ok")
 });
 
 
-app.get('/user/:id', (req, res)=>{
+app.get('/user/:id', (req, res) => {
   console.log(req.params.id);
   let id = req.params.id;
   let user_len = users.length
-  for(let i=0;i < user_len ; i++){
-    if(users[i].id == id){
+  for (let i = 0; i < user_len; i++) {
+    if (users[i].id == id) {
       res.send(users[i])
     }
   }
   res.send('ok')
+})
+
+app.get('/post', (req, res) => {
+  res.send("ok")
+})
+
+// app.get('/articles', (req, res) => {
+//   console.log(req)
+//   res.send(articles)
+// })
+
+// app.get('/articles/:id',(req,res)=>{
+//   let id = req.params.id
+//   let articles = articles[parseInt(id,10)]
+//   res.send(articles)
+// })
+
+// app.get('/articles/:id',(req,res)=>{
+//   let articles_id = req.params.id
+//   let article = articles[articles_id-1]
+//   res.send(article);
+// })
+
+app.get('/articles',(req,res)=>{
+  console.log(req)
+  res.send(articles)
+})
+
+app.delete('/articles/:id', (req, res) => {
+  const articleId = parseInt(req.params.id, 10);  // URL에서 :id를 파라미터로 받음
+  const index = articles.findIndex(article => article.id === articleId); // 해당 ID의 게시글 찾기
+  
+  if (index !== -1) {  // 게시글이 존재하면
+    articles.splice(index, 1);  // 해당 게시글 삭제
+    return res.json({ message: '게시글이 삭제되었습니다.' });
+  } else {
+    return res.status(404).json({ message: '게시글을 찾을 수 없습니다.' });
+  }
+});
+
+
+
+
+
+
+app.post('/articles',(req,res)=>{
+  // let headers = req.headers
+  // console.log(headers)
+
+  let data =  req.body
+  // console.log(data)
+  //id 증가
+  let lastId = articles[articles.length -1].id
+  console.log(lastId)
+  data["id"]= lastId + 1
+  //데이트 추가가
+  const currentTime = new Date().toISOString();
+  data.date = currentTime;
+
+  articles.push(data)
+  return res.json("ok")
+})
+
+app.get('/articles/:id',(req,res)=>{
+  let article_id = req.params.id
+   for(let i = 0;  i < articles.length; i++){
+    if(articles[i].id == article_id){
+      return res.json(articles[i])
+    }
+   }
+
+   return res.json('없어졌습니다')
 })
