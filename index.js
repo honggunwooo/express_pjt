@@ -220,20 +220,25 @@ app.get('/articles',(req,res)=>{
   res.send(articles)
 })
 
-app.delete('/articles/:id', (req, res) => {
-  const articleId = parseInt(req.params.id, 10);  // URL에서 :id를 파라미터로 받음
-  const index = articles.findIndex(article => article.id === articleId); // 해당 ID의 게시글 찾기
+// app.delete('/articles/:id', (req, res) => {
+//   const articleId = parseInt(req.params.id, 10);  // URL에서 :id를 파라미터로 받음
+//   const index = articles.findIndex(article => article.id === articleId); // 해당 ID의 게시글 찾기
   
-  if (index !== -1) {  // 게시글이 존재하면
-    articles.splice(index, 1);  // 해당 게시글 삭제
-    return res.json({ message: '게시글이 삭제되었습니다.' });
-  } else {
-    return res.status(404).json({ message: '게시글을 찾을 수 없습니다.' });
-  }
-});
+//   if (index !== -1) {  // 게시글이 존재하면
+//     articles.splice(index, 1);  // 해당 게시글 삭제
+//     return res.json({ message: '게시글이 삭제되었습니다.' });
+//   } else {
+//     return res.status(404).json({ message: '게시글을 찾을 수 없습니다.' });
+//   }
+// });
 
 
-
+app.delete('/articles/:id',(req,res)=>{
+  let id = req.params.id
+  console.log(id);
+  articles.splice(id-1, 1);
+  res.send('ok')
+})
 
 
 
