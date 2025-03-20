@@ -15,7 +15,6 @@ console.log("Hello world")
 # SQL 쿼리 정리
 
 ## 1. `User` 테이블 생성
-
 ```sql
 CREATE TABLE User (
     id INTEGER PRIMARY KEY AUTOINCREMENT,  -- 유저 고유 ID, 자동 증가
