@@ -11,3 +11,16 @@
 ``` 
 console.log("Hello world")
 ```
+
+# SQL 쿼리 정리
+
+## 1. `User` 테이블 생성
+
+```sql
+CREATE TABLE User (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,  -- 유저 고유 ID, 자동 증가
+    email TEXT NOT NULL UNIQUE,            -- 이메일, 필수 입력, 유니크 값
+    password TEXT NOT NULL,                -- 비밀번호, 필수 입력
+    profile_url TEXT,                      -- 프로필 URL, 선택 입력
+    nickname TEXT NOT NULL UNIQUE          -- 닉네임, 필수 입력, 유니크 값
+);
