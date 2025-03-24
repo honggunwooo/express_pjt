@@ -103,19 +103,19 @@ app.put('/articles/:id', (req, res) => {
 
 
 // 서버 시작 시 commit 테이블 생성
-db.run(`CREATE TABLE IF NOT EXISTS commit (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    content TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    article_id INTEGER NOT NULL,
-    FOREIGN KEY (article_id) REFERENCES articles (id) ON DELETE CASCADE
-)`, (err) => {
-    if (err) {
-        console.error('commit 테이블 생성 중 오류 발생:', err.message);
-    } else {
-        console.log('commit 테이블이 정상적으로 생성되었습니다.');
-    }
-});
+// db.run(`CREATE TABLE IF NOT EXISTS commit (
+//     id INTEGER PRIMARY KEY AUTOINCREMENT,
+//     content TEXT NOT NULL,
+//     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+//     article_id INTEGER NOT NULL,
+//     FOREIGN KEY (article_id) REFERENCES articles (id) ON DELETE CASCADE
+// )`, (err) => {
+//     if (err) {
+//         console.error('commit 테이블 생성 중 오류 발생:', err.message);
+//     } else {
+//         console.log('commit 테이블이 정상적으로 생성되었습니다.');
+//     }
+// });
 
 
 // 댓글 추가 엔드포인트
@@ -141,3 +141,14 @@ app.post('/articles/:id/comments', (req, res) => {
         });
     });
 });
+
+app.get('/articles/:id/comments', (req, res) => {
+    let article_Id = req.params.id
+    let sql = `SELECT * FROM comments WHERE article_id = ?`
+    db.all(sql, [article_Id], (err, rows) => {
+        if (err) {
+            return res.status(500).json({ error: err.message })
+        }
+        res.json(rows)
+    })
+})
