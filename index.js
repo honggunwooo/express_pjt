@@ -12,26 +12,17 @@ app.use(express.json())
 const sqlite3 = require('sqlite3').verbose();
 const db = new sqlite3.Database('./database.db');
 
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
+
+const secretKey = 'mysecretkey'; // JWT 서명에 사용할 비밀키
+
 app.listen(PORT, () => {
     console.log(`서버가 http://localhost:${PORT} 에서 실행 중입니다.`);
 });
 
 
 
-
-
-app.post('/articles', (req, res) => {
-    const { title, content } = req.body;
-
-    db.run(`INSERT INTO articles (title, content) VALUES (?, ?)`,
-        [title, content],
-        function (err) {
-            if (err) {
-                return res.status(500).json({ error: err.message });
-            }
-            res.json({ id: this.lastID, title, content });
-        });
-});
 
 
 
@@ -153,25 +144,33 @@ app.get('/articles/:id/comments', (req, res) => {
     })
 })
 
-
 app.post('/users', (req, res) => {
-    let { email, password } = req.body
+    let { email, password } = req.body;
 
-    db.run('INSERT INTO users (email, password) VALUES (?, ?)', [email, password], function (err) {
+    // 비밀번호를 bcrypt로 해싱
+    bcrypt.hash(password, 10, (err, hashedPassword) => {
         if (err) {
             return res.status(500).json({ error: err.message });
         }
-        res.status(201).json({
-            id: this.lastID,
-            email,
-            created_at: new Date().toISOString()
-        })
-    })
 
-})
+        // 해싱된 비밀번호를 데이터베이스에 저장
+        db.run('INSERT INTO users (email, password) VALUES (?, ?)', [email, hashedPassword], function (err) {
+            if (err) {
+                return res.status(500).json({ error: err.message });
+            }
+
+            res.status(201).json({
+                id: this.lastID,
+                email,
+                created_at: new Date().toISOString()
+            });
+        });
+    });
+});
 
 app.post('/login', (req, res) => {
     const { email, password } = req.body;
+
     if (!email || !password) {
         return res.status(400).json({ error: '이메일과 비밀번호를 입력하세요.' });
     }
@@ -180,18 +179,81 @@ app.post('/login', (req, res) => {
         if (err) {
             return res.status(500).json({ error: '데이터베이스 오류' });
         }
-        if (!user) { // 비밀번호 해싱 없이 비교
+        if (!user) {
             return res.status(401).json({ error: '이메일 없음.' });
         }
-        if (user.password !== password) {
-            return res.status(401).json({message : '비밀번호가 틀림'})
-        }
-        res.status(200).json({
-            message:"로그인 성공",
-            user:{
-                id: user.id,
-                email: user.email
+
+        // bcrypt로 비밀번호 비교
+        bcrypt.compare(password, user.password, (err, isMatch) => {
+            if (err) {
+                return res.status(500).json({ error: '비밀번호 비교 오류' });
             }
-        })
+            if (!isMatch) {
+                return res.status(401).json({ message: '비밀번호가 틀림' });
+            }
+
+            // JWT 생성 (1시간 후 만료)
+            const payload = { id: user.id, email: user.email };
+            const token = jwt.sign(payload, secretKey, { expiresIn: '1h' });
+
+            // 로그인 성공 후 JWT 토큰 반환
+            res.status(200).json({
+                message: "로그인 성공",
+                token: token
+            });
+        });
+    });
+});
+
+app.get('/logintest', (req, res) => {
+    console.log(req.headers.authorization.split(' ')[1])
+    let token = req.headers.authorization.split(' ')[1]
+
+    jwt.verify(token, secretKey, (err, decoded) => {
+        if (err) {
+            return res.send("에러")
+        }
+
+        return res.send('로그인 성공!')
     })
+});
+
+
+// JWT 인증 미들웨어
+const authenticateJWT = (req, res, next) => {
+    const token = req.headers.authorization && req.headers.authorization.split(' ')[1]; // Bearer 토큰 형식으로 받음
+
+    if (!token) {
+        return res.status(403).json({ message: '로그인이 필요합니다.' });
+    }
+
+    jwt.verify(token, secretKey, (err, user) => {
+        if (err) {
+            return res.status(403).json({ message: '유효하지 않은 토큰입니다.' });
+        }
+        req.user = user; // 인증된 사용자 정보를 req.user에 추가
+        next(); // 인증이 성공하면 다음 미들웨어로 진행
+    });
+};
+
+// 게시글 작성 API에 인증 미들웨어 추가
+app.post('/articles', authenticateJWT, (req, res) => {
+    const { title, content } = req.body;
+
+    // 로그인한 사용자만 게시글을 작성할 수 있도록 합니다.
+    if (!title || !content) {
+        return res.status(400).json({ error: '제목과 내용을 모두 입력해주세요.' });
+    }
+
+    // 인증된 사용자 정보를 이용해 작성자를 기록할 수 있습니다.
+    const authorId = req.user.id; // JWT에서 인증된 사용자 ID를 가져옵니다.
+
+    db.run(`INSERT INTO articles (title, content, author_id) VALUES (?, ?, ?)`,
+        [title, content, authorId],
+        function (err) {
+            if (err) {
+                return res.status(500).json({ error: err.message });
+            }
+            res.json({ id: this.lastID, title, content, author_id: authorId });
+        });
 });

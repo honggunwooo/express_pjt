@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - 게시글 작성</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        .post-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="post-container">
+        <h2>게시글 작성</h2>
+        <form id="postForm">
+            <input type="text" id="title" placeholder="제목" required />
+            <textarea id="content" placeholder="내용" rows="5" required></textarea>
+            <button type="submit">게시글 작성</button>
+        </form>
+        <p id="error-message" style="color: red;"></p>
+    </div>
+
+    <script>
+        // 로그인 상태 확인
+        const token = localStorage.getItem('token');
+        if (!token) {
+            alert('로그인하지 않았습니다. 로그인 페이지로 이동합니다.');
+            window.location.href = '/index.html'; // 로그인 페이지로 리다이렉트
+        }
+
+        document.getElementById('postForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const title = document.getElementById('title').value;
+            const content = document.getElementById('content').value;
+
+            if (!title || !content) {
+                document.getElementById('error-message').textContent = '제목과 내용을 입력하세요.';
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:3000/post', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({ title, content }),
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert('게시글이 작성되었습니다.');
+                    // 게시글 작성 후 다른 페이지로 리다이렉트하거나, 게시글 목록을 갱신하는 방식으로 처리 가능
+                    window.location.href = '/dashboard.html'; // 대시보드 페이지로 리다이렉트
+                } else {
+                    document.getElementById('error-message').textContent = data.error || data.message;
+                }
+            } catch (error) {
+                document.getElementById('error-message').textContent = '서버와의 통신에 실패했습니다.';
+            }
+        });
+    </script>
+</body>
+</html>
