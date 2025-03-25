@@ -152,3 +152,46 @@ app.get('/articles/:id/comments', (req, res) => {
         res.json(rows)
     })
 })
+
+
+app.post('/users', (req, res) => {
+    let { email, password } = req.body
+
+    db.run('INSERT INTO users (email, password) VALUES (?, ?)', [email, password], function (err) {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        res.status(201).json({
+            id: this.lastID,
+            email,
+            created_at: new Date().toISOString()
+        })
+    })
+
+})
+
+app.post('/login', (req, res) => {
+    const { email, password } = req.body;
+    if (!email || !password) {
+        return res.status(400).json({ error: '이메일과 비밀번호를 입력하세요.' });
+    }
+
+    db.get('SELECT * FROM users WHERE email = ?', [email], (err, user) => {
+        if (err) {
+            return res.status(500).json({ error: '데이터베이스 오류' });
+        }
+        if (!user) { // 비밀번호 해싱 없이 비교
+            return res.status(401).json({ error: '이메일 없음.' });
+        }
+        if (user.password !== password) {
+            return res.status(401).json({message : '비밀번호가 틀림'})
+        }
+        res.status(200).json({
+            message:"로그인 성공",
+            user:{
+                id: user.id,
+                email: user.email
+            }
+        })
+    })
+});
