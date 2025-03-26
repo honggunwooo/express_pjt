@@ -23,3 +23,6 @@ CREATE TABLE User (
     profile_url TEXT,                      -- 프로필 URL, 선택 입력
     nickname TEXT NOT NULL UNIQUE          -- 닉네임, 필수 입력, 유니크 값
 );
+
+
+ 헤쉬를 매번 써버 비교를 해줘야함                                                                                       

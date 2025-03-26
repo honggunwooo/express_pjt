@@ -144,6 +144,7 @@ app.get('/articles/:id/comments', (req, res) => {
     })
 })
 
+//회원가입
 app.post('/users', (req, res) => {
     let { email, password } = req.body;
 
@@ -168,6 +169,7 @@ app.post('/users', (req, res) => {
     });
 });
 
+//로그인
 app.post('/login', (req, res) => {
     const { email, password } = req.body;
 
@@ -229,7 +231,7 @@ const authenticateJWT = (req, res, next) => {
 
     jwt.verify(token, secretKey, (err, user) => {
         if (err) {
-            return res.status(403).json({ message: '유효하지 않은 토큰입니다.' });
+            return res.status(403).json({ message: '로그인하고 이용해주세요..' });
         }
         req.user = user; // 인증된 사용자 정보를 req.user에 추가
         next(); // 인증이 성공하면 다음 미들웨어로 진행
@@ -248,12 +250,12 @@ app.post('/articles', authenticateJWT, (req, res) => {
     // 인증된 사용자 정보를 이용해 작성자를 기록할 수 있습니다.
     const authorId = req.user.id; // JWT에서 인증된 사용자 ID를 가져옵니다.
 
-    db.run(`INSERT INTO articles (title, content, author_id) VALUES (?, ?, ?)`,
-        [title, content, authorId],
+    db.run(`INSERT INTO articles (title, content) VALUES (?, ?)`,
+        [title, content],
         function (err) {
             if (err) {
                 return res.status(500).json({ error: err.message });
             }
-            res.json({ id: this.lastID, title, content, author_id: authorId });
+            res.json({ id: this.lastID, title, content});
         });
 });
